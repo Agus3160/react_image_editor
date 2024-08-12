@@ -19,7 +19,7 @@ export default function CustomFont({
   borderColor,
   fontFamily,
   lineHeight,
-  className,
+  className="",
   text,
   textAlign
 }: Props) {

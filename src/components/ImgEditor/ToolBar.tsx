@@ -39,7 +39,7 @@ export default function ToolBar() {
         <FlipHorizontal size={32} />
       </button>
       <button
-          onClick={() => saveImage(imageUrl, textBoxes)}
+          onClick={() => saveImage(imageUrl, textBoxes, scaleX)}
           title="Download local"
           className="p-2 bg-green-600 text-white text-center hover:bg-green-700 rounded"
         >

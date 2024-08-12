@@ -17,7 +17,6 @@ export default function TextEditor() {
     useEditImageContext();
 
   const lastFocusIndex = config.textBox.lastFocusIndex;
-  const quantityOfBoxes = config.textBox.boxes.length;
   const iconsList = [AlignLeft, AlignCenter, AlignRight];
 
   const handleCloseTextBox = () => {
@@ -25,10 +24,11 @@ export default function TextEditor() {
   };
 
   const handleDeleteTextBox = () => {
-    if (!lastFocusIndex) return;
+    if (lastFocusIndex === null) return;
     const boxes = config.textBox.boxes;
-    setTextBoxes(boxes.filter((_, index) => index !== lastFocusIndex));
-    setLastFocusIndex(quantityOfBoxes - 1 === 0 ? null : lastFocusIndex - 1);
+    const deleteIndex = lastFocusIndex;
+    setLastFocusIndex(null);
+    setTextBoxes(boxes.filter((_, index) => index !== deleteIndex));
   };
 
   if (lastFocusIndex === null) return null;

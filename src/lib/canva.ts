@@ -1,11 +1,11 @@
-import { StyleBorderEnum, TextBox, TEXT_SHADOW_CANVAS, TEXT_SHADOW_CANVAS_RESET } from "./definitions";
+import {
+  StyleBorderEnum,
+  TextBox,
+  TEXT_SHADOW_CANVAS,
+  TEXT_SHADOW_CANVAS_RESET,
+} from "./definitions";
 
-const saveImage = (imageUrl: string, textBoxes: TextBox[]) => {
-  const previewImg = document.getElementById("preview");
-
-  if (!previewImg) throw new Error("Preview image not found");
-
-  const previewWidth = previewImg.clientWidth;
+const saveImage = (imageUrl: string, textBoxes: TextBox[], scaleX: number) => {
 
   // If no text box is found, throw an error
   if (textBoxes.length === 0) throw new Error("No text box found");
@@ -22,14 +22,11 @@ const saveImage = (imageUrl: string, textBoxes: TextBox[]) => {
 
     if (!ctx) throw new Error("No context found");
 
-    // Scale the image
-    const newScale = img.width / previewWidth;
-
     // Draw the image
-    ctx.drawImage(img, 0, 0, img.width, img.height);
+    drawImageByScaleX(ctx, canvas, img, scaleX);
 
     // Draw Text boxes
-    drawTextBoxes(textBoxes, ctx, newScale);
+    drawTextBoxes(textBoxes, ctx);
 
     // Save the canvas content as an image
     const imageData = canvas.toDataURL("image/png");
@@ -40,23 +37,23 @@ const saveImage = (imageUrl: string, textBoxes: TextBox[]) => {
   };
 };
 
-const drawTextBoxes = (
-  textBoxes: TextBox[],
-  ctx: CanvasRenderingContext2D,
-  scale: number,
-) => {
+const drawTextBoxes = (textBoxes: TextBox[], ctx: CanvasRenderingContext2D) => {
   for (let i = 0; i < textBoxes.length; i++) {
-    let text = scaleTextBox(textBoxes[i], scale);
+    let text: TextBox = {
+      ...textBoxes[i],
+      lineHeight: Math.round(textBoxes[i].lineHeight * textBoxes[i].fontSize),
+    };
 
     ctx.font = `${text.fontSize}px ${text.fontFamily}`;
     ctx.fillStyle = text.color;
 
-    if (text.styleBorder === StyleBorderEnum.solid) applyBorder(ctx, text.borderColor);
+    if (text.styleBorder === StyleBorderEnum.solid)
+      applyBorder(ctx, text.borderColor);
     else resetBorder(ctx);
 
-    if (text.textAlign === 'center') {
+    if (text.textAlign === "center") {
       drawCenteredText(ctx, text);
-    } else if (text.textAlign === 'right') {
+    } else if (text.textAlign === "right") {
       drawRightAlignedText(ctx, text);
     } else {
       drawLeftAlignedText(ctx, text); // Default alignment (left)
@@ -117,27 +114,16 @@ const wrapText = (ctx: CanvasRenderingContext2D, text: TextBox) => {
   let line = "";
   let testLine: string;
   let testWidth: number;
-
   for (let i = 0; i < words.length; i++) {
-    testLine = line + words[i] + " ";
+    testLine = line + (line ? " " : "") + words[i];
     testWidth = ctx.measureText(testLine).width;
 
-    //Verify if the width is bigger than the maxWidth and remove the last word in case it is a space
-    if (testWidth > text.width && testLine[testLine.length-1] === " ") {
-      testLine = testLine.slice(0, testLine.length - 1);
-      testWidth = ctx.measureText(testLine).width;
-    }
-
-    //Verify if the width is bigger than the maxWidth and add the word in case it is not blank
-    if (testWidth > text.width && line[line.length-1] !== "") {
-      lines.push(line);
-      line = words[i] + " ";
-    } else {
-      line = testLine;
-    }
+    if (testWidth > text.width) {
+      if (line) lines.push(line.trim());
+      line = words[i];
+    } else line = testLine;
   }
-  lines.push(line.trim()); // Add the last line
-
+  if (line) lines.push(line.trim());
   return lines;
 };
 
@@ -155,4 +141,20 @@ const resetBorder = (ctx: CanvasRenderingContext2D) => {
   ctx.shadowOffsetY = TEXT_SHADOW_CANVAS_RESET.shadowOffsetY;
 };
 
-export { saveImage };
+const drawImageByScaleX = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, img: HTMLImageElement, scaleX: number) => {
+  // Draw the image with scaling
+  if (scaleX < 0) {
+    ctx.save(); // Save the current state
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(img, 0, 0, img.width, img.height);
+    ctx.restore(); // Restore the state to undo the transformation
+  } else {
+    ctx.drawImage(img, 0, 0, img.width, img.height);
+  }
+
+  // Reset transformations for drawing text
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to default transformation matrix
+}
+
+export { saveImage, scaleTextBox };

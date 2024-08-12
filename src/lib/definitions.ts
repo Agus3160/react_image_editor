@@ -11,7 +11,7 @@ export enum TextAlignEnum {
 
 export const defaultValuesTextBox: TextBox = {
   text: "Enter text here",
-  fontSize: 18,
+  fontSize: 24,
   lineHeight: 1.2,
   x: 25,
   y: 25,
@@ -29,7 +29,7 @@ export const TEXT_SHADOW_CSS = "2px 4px 3px";
 export const TEXT_SHADOW_CANVAS = {
   shadowBlur: 3,
   shadowOffsetX: 2,
-  shadowOffsetY: 2,
+  shadowOffsetY: 4,
 }
 
 export const TEXT_SHADOW_CANVAS_RESET = {
