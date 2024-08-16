@@ -3,6 +3,13 @@ export enum StyleBorderEnum {
   solid = "solid",
 }
 
+export enum SpaceStyleEnum {
+  none = "none",
+  top = "top",
+  bottom = "bottom",
+  both = "both",
+}
+
 export enum TextAlignEnum {
   left = "left",
   center = "center",
@@ -24,12 +31,12 @@ export const defaultValuesTextBox: TextBox = {
   textAlign: TextAlignEnum.left,
 };
 
-export const TEXT_SHADOW_CSS = "2px 4px 3px";
+export const TEXT_SHADOW_CSS = "0px 1px 4px";
 
 export const TEXT_SHADOW_CANVAS = {
-  shadowBlur: 3,
-  shadowOffsetX: 2,
-  shadowOffsetY: 4,
+  shadowBlur: 4,
+  shadowOffsetX: 0,
+  shadowOffsetY: 1,
 }
 
 export const TEXT_SHADOW_CANVAS_RESET = {
@@ -53,3 +60,9 @@ export type TextBox = {
   borderColor: string;
   textAlign: TextAlignEnum;
 };
+
+export type SpaceImgConfigType = {
+  style: SpaceStyleEnum;
+  sizePercent: number;
+  color: string;
+}

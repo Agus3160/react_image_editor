@@ -1,11 +1,19 @@
+import { EditImageConfig } from "../context/EditImageContext";
 import {
   StyleBorderEnum,
   TextBox,
   TEXT_SHADOW_CANVAS,
   TEXT_SHADOW_CANVAS_RESET,
+  SpaceStyleEnum,
+  SpaceImgConfigType,
 } from "./definitions";
 
-const saveImage = (imageUrl: string, textBoxes: TextBox[], scaleX: number) => {
+const saveImage = (config: EditImageConfig) => {
+  const { img: imgageConfig, textBox, space } = config;
+
+  const textBoxes = textBox.boxes;
+  const imageUrl = imgageConfig.url;
+  const scale = { scaleX: imgageConfig.scaleX, scaleY: imgageConfig.scaleY };
 
   // If no text box is found, throw an error
   if (textBoxes.length === 0) throw new Error("No text box found");
@@ -16,14 +24,12 @@ const saveImage = (imageUrl: string, textBoxes: TextBox[], scaleX: number) => {
   img.onload = () => {
     // Create a canvas dynamically
     const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
     const ctx = canvas.getContext("2d");
 
     if (!ctx) throw new Error("No context found");
 
     // Draw the image
-    drawImageByScaleX(ctx, canvas, img, scaleX);
+    drawImageByScaleXY(ctx, canvas, img, scale, space);
 
     // Draw Text boxes
     drawTextBoxes(textBoxes, ctx);
@@ -141,20 +147,70 @@ const resetBorder = (ctx: CanvasRenderingContext2D) => {
   ctx.shadowOffsetY = TEXT_SHADOW_CANVAS_RESET.shadowOffsetY;
 };
 
-const drawImageByScaleX = (ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, img: HTMLImageElement, scaleX: number) => {
-  // Draw the image with scaling
-  if (scaleX < 0) {
-    ctx.save(); // Save the current state
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(img, 0, 0, img.width, img.height);
-    ctx.restore(); // Restore the state to undo the transformation
-  } else {
-    ctx.drawImage(img, 0, 0, img.width, img.height);
+const drawImageByScaleXY = (
+  ctx: CanvasRenderingContext2D,
+  canvas: HTMLCanvasElement,
+  img: HTMLImageElement,
+  scale: { scaleX: number; scaleY: number },
+  space: SpaceImgConfigType
+) => {
+  const { scaleX, scaleY } = scale;
+
+  ctx.save(); // Guardar el estado actual
+
+  canvas.height = img.height;
+  canvas.width = img.width;
+
+  const { color, style } = space;
+
+  const useSpace = style !== SpaceStyleEnum.none;
+
+  const dy = useSpace ? calculateSpace(space, canvas.height) : 0;
+
+  canvas.height = canvas.height + dy;
+
+  // Aplicar color de fondo si es necesario
+  if (useSpace) {
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Reset transformations for drawing text
-  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to default transformation matrix
-}
+  ctx.scale(scaleX, scaleY); // Aplicar la transformación de escalado
 
-export { saveImage, scaleTextBox };
+  // Calcular la posición inicial corregida para voltear
+  const x = scaleX === -1 ? -canvas.width : 0;
+
+  let y = 0;
+  y = scaleY === -1 ? -canvas.height : 0;
+
+  y += (
+    style === SpaceStyleEnum.top ? 
+      dy 
+    : style === SpaceStyleEnum.bottom ? 
+      0
+    : 
+      dy / 2
+  );
+
+  // Dibujar la imagen con el tamaño original
+  ctx.drawImage(img, x, y, canvas.width, canvas.height - dy);
+
+  ctx.restore(); // Restaurar el estado para deshacer la transformación
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset scale to 1 for normal text drawing
+};
+
+const calculateSpace = (
+  space: { style: SpaceStyleEnum; sizePercent: number },
+  heigth: number
+) => {
+  const spaceHeight =
+    space.sizePercent *
+    heigth *
+    (SpaceStyleEnum.bottom === space.style || SpaceStyleEnum.top === space.style
+      ? 1
+      : 2);
+  return spaceHeight;
+};
+
+export { saveImage, scaleTextBox, drawImageByScaleXY };

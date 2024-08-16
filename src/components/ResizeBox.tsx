@@ -26,18 +26,22 @@ function Resizeable({
   setSize,
   setPos,
   isFocused,
-  minSize = 50,
+  minSize = 25,
   handleGetFocused,
   parentElement,
 }: Props) {
   const [isResizing, setIsResizing] = useState(false);
 
+  const lockScroll = ["h-full", "w-full", "overflow-hidden", "fixed"]
+
   const desactivateUserSelect = () => {
     document.body.style.userSelect = "none";
+    document.body.classList.add(...lockScroll);
   };
 
   const activateUserSelect = () => {
     document.body.style.userSelect = "auto";
+    document.body.classList.remove(...lockScroll);
   };
 
   const handleMove = (

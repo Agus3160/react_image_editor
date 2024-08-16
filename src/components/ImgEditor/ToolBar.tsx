@@ -1,15 +1,30 @@
-import { CirclePlus, Download, FlipHorizontal, LetterText, Upload } from "lucide-react";
+import {
+  CirclePlus,
+  Download,
+  FlipHorizontal,
+  FlipVertical,
+  LetterText,
+  RectangleHorizontal,
+  Upload,
+} from "lucide-react";
 import { useEditImageContext } from "../../context/EditImageContext";
-import { defaultValuesTextBox } from "../../lib/definitions";
+import { defaultValuesTextBox, SpaceStyleEnum } from "../../lib/definitions";
 import { saveImage } from "../../lib/canva";
 
 export default function ToolBar() {
-
-  const { config, setTextBoxes, setFocusIndex, setScaleXImg, setLastFocusIndex } = useEditImageContext();
+  const {
+    config,
+    setTextBoxes,
+    setFocusIndex,
+    setScaleXImg,
+    setScaleYImg,
+    setLastFocusIndex,
+    setSpace,
+  } = useEditImageContext();
 
   const textBoxes = config.textBox.boxes;
-  const scaleX = config.img.scaleX;
-  const imageUrl = config.img.url;
+  const scale = { scaleX: config.img.scaleX, scaleY: config.img.scaleY };
+  const space = config.space;
 
   const handleAddTextBox = () => {
     setTextBoxes([...textBoxes, defaultValuesTextBox]);
@@ -18,7 +33,7 @@ export default function ToolBar() {
   };
 
   return (
-    <div className="flex justify-center gap-6 px-4">
+    <div className="flex justify-around px-4">
       <button
         title="Add text box"
         onClick={handleAddTextBox}
@@ -32,26 +47,57 @@ export default function ToolBar() {
         />
       </button>
       <button
-        onClick={() => setScaleXImg(scaleX === 1 ? -1 : 1)}
-        className={`relative text-white active:bg-slate-900 p-2 rounded ${scaleX === 1 ? "hover:bg-slate-600 bg-slate-700" : "bg-slate-900"}`}
+        onClick={() => setScaleXImg(scale.scaleX === 1 ? -1 : 1)}
+        className={`relative text-white active:bg-slate-900 p-2 rounded ${
+          scale.scaleX === 1
+            ? "hover:bg-slate-600 bg-slate-700"
+            : "bg-slate-800"
+        }`}
         title="Flip Horizontal"
       >
         <FlipHorizontal size={32} />
       </button>
       <button
-          onClick={() => saveImage(imageUrl, textBoxes, scaleX)}
-          title="Download local"
-          className="p-2 bg-green-600 text-white text-center hover:bg-green-700 rounded"
-        >
-        <Download size={32}/>
+        onClick={() => setScaleYImg(scale.scaleY === 1 ? -1 : 1)}
+        className={`relative text-white active:bg-slate-900 p-2 rounded ${
+          scale.scaleY === 1
+            ? "hover:bg-slate-600 bg-slate-700"
+            : "bg-slate-800"
+        }`}
+        title="Flip Vertical"
+      >
+        <FlipVertical size={32} />
       </button>
       <button
-          title="Publish post"
-          className="p-2 bg-blue-600 text-white text-center hover:bg-blue-700 rounded"
-        >
-        <Upload size={32}/>
+        title="Add space"
+        onClick={() =>
+          setSpace(
+            space.style === SpaceStyleEnum.none
+              ? { ...space, style: SpaceStyleEnum.top, sizePercent: 0.2 }
+              : { ...space, style: SpaceStyleEnum.none }
+          )
+        }
+        className={`relative text-white active:bg-slate-900 p-2 rounded ${
+          space.style === SpaceStyleEnum.none
+            ? "hover:bg-slate-600 bg-slate-700"
+            : "bg-slate-800"
+        }`}
+      >
+        <RectangleHorizontal size={32} />
       </button>
-      
+      <button
+        onClick={() => saveImage(config)}
+        title="Download local"
+        className="p-2 bg-green-600 text-white text-center hover:bg-green-700 rounded"
+      >
+        <Download size={32} />
+      </button>
+      <button
+        title="Publish post"
+        className="p-2 bg-blue-600 text-white text-center hover:bg-blue-700 rounded"
+      >
+        <Upload size={32} />
+      </button>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import { TextBox, defaultValuesTextBox } from "../lib/definitions";
+import { SpaceImgConfigType, SpaceStyleEnum, TextBox, defaultValuesTextBox } from "../lib/definitions";
 
 export type EditImageConfig = {
   img: {
@@ -12,6 +12,7 @@ export type EditImageConfig = {
     focusIndex: number | null;
     lastFocusIndex: number | null;
   };
+  space:SpaceImgConfigType
 };
 
 export type EditImageContextType = {
@@ -23,6 +24,8 @@ export type EditImageContextType = {
   setLastFocusIndex: (index: number | null) => void;
   setTextBoxByIndex: (index: number, newTextBox: TextBox) => void;
   setScaleXImg: (scaleX: number) => void;
+  setScaleYImg: (scaleY: number) => void;
+  setSpace: ({style, sizePercent, color}: {style: SpaceStyleEnum, sizePercent: number, color: string}) => void;
 };
 
 export const EditImageContext = createContext<EditImageContextType | null>(
@@ -46,6 +49,11 @@ export const EditImageProvider = ({
       boxes: [defaultValuesTextBox],
       focusIndex: 0,
       lastFocusIndex: 0,
+    },
+    space: {
+      style: SpaceStyleEnum.none,
+      sizePercent: 0.2,
+      color: "#ffffff",
     },
   };
 
@@ -88,6 +96,20 @@ export const EditImageProvider = ({
       img: { ...prev.img, scaleX },
     }));
   }
+  const setScaleYImg = (scaleY: number) => {
+    setEditImageContext((prev) => ({
+      ...prev,
+      img: { ...prev.img, scaleY },
+    }));
+  }
+
+  const setSpace = ({style, sizePercent, color}: {style: SpaceStyleEnum, sizePercent: number, color: string}) => {
+    console.log(style, sizePercent, color)
+    setEditImageContext((prev) => ({
+      ...prev,
+      space: { ...prev.space, style, sizePercent, color },
+    }));
+  }
 
   return (
     <EditImageContext.Provider
@@ -98,7 +120,9 @@ export const EditImageProvider = ({
         setFocusIndex,
         setLastFocusIndex,
         setTextBoxByIndex,
-        setScaleXImg
+        setScaleXImg,
+        setScaleYImg,
+        setSpace
       }}
     >
       {children}

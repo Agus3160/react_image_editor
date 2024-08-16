@@ -7,7 +7,7 @@ function App() {
   const imageUrl = "/michi.png";
 
   return (
-    <main className="bg-slate-900 h-dvh w-dvw text-white flex items-center justify-center gap-8">
+    <main className="bg-slate-900 h-dvh w-dvw w-full h-full text-white gap-8">
       <EditImageProvider imageUrl={imageUrl}>
         <ImageEditor />
       </EditImageProvider>
