@@ -33,7 +33,7 @@ export default function ToolBar() {
   };
 
   return (
-    <div className="flex justify-around px-4">
+    <div className="flex w-auto gap-2 flex-row  justify-around ">
       <button
         title="Add text box"
         onClick={handleAddTextBox}

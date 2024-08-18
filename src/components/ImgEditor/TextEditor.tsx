@@ -6,11 +6,19 @@ import {
   Ban,
   Trash2,
   TypeOutline,
-  X,
 } from "lucide-react";
 import { onKeyDownTextArea } from "../../lib/validation";
 import { useEditImageContext } from "../../context/EditImageContext";
 import CustomSelect from "../CustomSelect";
+
+const fontFamilyList = [
+  "Arial",
+  "Comic Sans MS",
+  "Georgia",
+  "Impact",
+  "Tahoma",
+  "Times New Roman",
+]
 
 export default function TextEditor() {
   const { config, setTextBoxByIndex, setTextBoxes, setLastFocusIndex } =
@@ -18,10 +26,6 @@ export default function TextEditor() {
 
   const lastFocusIndex = config.textBox.lastFocusIndex;
   const iconsList = [AlignLeft, AlignCenter, AlignRight];
-
-  const handleCloseTextBox = () => {
-    setLastFocusIndex(null);
-  };
 
   const handleDeleteTextBox = () => {
     if (lastFocusIndex === null) return;
@@ -39,12 +43,6 @@ export default function TextEditor() {
       className={`flex flex-col gap-2 bg-slate-700 shadow-lg rounded p-3 relative 
         ${lastFocusIndex !== null ? "animate-slideDown" : "animate-slideUp"}`}
     >
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">{`Text #${lastFocusIndex + 1}`}</h2>
-        <button className="hover:text-red-500" onClick={handleCloseTextBox}>
-          <X />
-        </button>
-      </div>
 
       <div className="flex gap-2 flex-wrap flex-1 items-center">
         <div className="flex w-full gap-1 items-center">
@@ -112,27 +110,32 @@ export default function TextEditor() {
                   })
                 }
               >
-                <option value="Arial">Arial</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Helvetica">Helvetica</option>
-                <option value="Trebuchet MS">Trebuchet MS</option>
-                <option value="Impact">Impact</option>
+                {fontFamilyList.map((value) => (
+                  <option
+                    style={{ fontFamily: value }}
+                    key={value} 
+                    value={value}
+                  >
+                    {value}
+                  </option>
+                ))}
               </select>
             </div>
 
-            <div className="flex gap-1  items-center">
+            <div className="flex gap-1 items-center">
               <input
                 id="fontSize"
                 name="fontSize"
                 type="number"
                 className="bg-slate-800 rounded outline-none p-1 w-16"
                 value={currentBox.fontSize}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const newValue = e.target.value.replace(/^0+/, '') || '0';
                   setTextBoxByIndex(lastFocusIndex, {
                     ...currentBox,
-                    fontSize: Number(e.target.value),
+                    fontSize: Number(newValue),
                   })
-                }
+                }}
               ></input>
             </div>
 

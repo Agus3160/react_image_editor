@@ -20,10 +20,10 @@ export const defaultValuesTextBox: TextBox = {
   text: "Enter text here",
   fontSize: 24,
   lineHeight: 1.2,
-  x: 25,
-  y: 25,
-  width: 250,
-  height: 75,
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
   color: "#ffffff",
   fontFamily: "Arial",
   styleBorder: StyleBorderEnum.none,
@@ -44,6 +44,11 @@ export const TEXT_SHADOW_CANVAS_RESET = {
   shadowBlur: 0,             
   shadowOffsetX: 0,           
   shadowOffsetY: 0,
+}
+
+export type Axis =  {
+  x: number;
+  y: number;
 }
 
 export type TextBox = {

@@ -1,104 +1,83 @@
 import { useEffect, useRef, useState } from "react";
-import Resizeable, { Axis } from "../ResizeBox";
-import CustomFont from "./CustomFont";
 import { useEditImageContext } from "../../context/EditImageContext";
 import Loading from "../Loading";
 import { drawImageByScaleXY } from "../../lib/canva";
+import TextBox from "../TextBox/TextBox";
+import { Axis } from "../../lib/definitions";
 
 export default function Preview() {
-  const { config, setTextBoxByIndex, setFocusIndex, setLastFocusIndex } =
+  const { config, setTextBoxByIndex, setLastFocusIndex } =
     useEditImageContext();
 
   const textBoxes = config.textBox.boxes;
   const imageUrl = config.img.url;
-  const focusIndex = config.textBox.focusIndex;
   const scaleX = config.img.scaleX;
   const scaleY = config.img.scaleY;
   const spaceConfig = config.space;
 
   const containerRef = useRef<HTMLDivElement>(null);
-
   const [img, setImg] = useState("");
-  const [containerSize, setContainerSize] = useState({ width: 1, height: 1 });
-  const [imgDimensions, setImgDimensions] = useState({ width: 1, height: 1 });
 
-  const setPosHandler = (index: number, pos: Axis) => {
-    const newTextBox = { ...textBoxes[index], x: pos.x, y: pos.y };
+  const setPosHandler = (index: number, pos: Axis, scale: Axis = { x: 1, y: 1 }) => {
+    const newTextBox = { ...textBoxes[index], x: pos.x / scale.x, y: pos.y / scale.y };
     setTextBoxByIndex(index, newTextBox);
   };
 
-  const setSizeHanlder = (index: number, size: Axis) => {
-    const newTextBox = { ...textBoxes[index], width: size.x, height: size.y };
+  const setSizeHandler = (index: number, size: Axis, scale: Axis = { x: 1, y: 1 }) => {
+    const newTextBox = { ...textBoxes[index], width: size.x / scale.x, height: size.y / scale.y };
     setTextBoxByIndex(index, newTextBox);
   };
 
-  const reubicateTextBoxes = (height:number) => {
-    
-    // Reubicar cuadros de texto si es necesario
+  const reubicateTextBoxes = (containerHeight: number, containerWidth: number) => {
     const newTextBoxes = textBoxes.map((textBox) => {
-      const newY = Math.min(textBox.y, height - textBox.height);
-      return { ...textBox, y: newY };
+      const newY = Math.min(textBox.y, containerHeight - textBox.height);
+      const newX = Math.min(textBox.x, containerWidth - textBox.width);
+      return { ...textBox, y: newY, x: newX };
     });
-    
-    // Actualiza los cuadros de texto
     newTextBoxes.forEach((textBox, index) => setTextBoxByIndex(index, textBox));
-  }
-
+  };
 
   useEffect(() => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
-  
+
     if (!ctx) throw new Error("No context found");
-  
+
     const image = new Image();
     image.crossOrigin = "anonymous";
     image.src = imageUrl;
-  
+
     image.onload = () => {
-      drawImageByScaleXY(ctx, canvas, image, { scaleX, scaleY }, spaceConfig); 
-      setImgDimensions({ width: image.width, height: canvas.height });
+      if (!containerRef.current) throw new Error("No container ref found");
+      drawImageByScaleXY(ctx, canvas, image, { scaleX, scaleY }, spaceConfig);
       setImg(canvas.toDataURL("image/png"));
-      reubicateTextBoxes(canvas.height);
+      reubicateTextBoxes(containerRef.current.clientHeight, containerRef.current.clientWidth);
     };
   }, [imageUrl, scaleX, scaleY, spaceConfig]);
-  
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    
+    if (!container) return;
 
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
-        const { width, height } = entry.contentRect;
-        setContainerSize({ width, height });
-      }
+      entries.forEach((entry) => {
+        reubicateTextBoxes(entry.contentRect.height, entry.contentRect.width);
+      })
     });
 
-    resizeObserver.observe(containerRef.current);
+    resizeObserver.observe(container);
 
     return () => {
-      if (containerRef.current) resizeObserver.unobserve(containerRef.current);
+      resizeObserver.disconnect();
     };
   }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      )
-        setFocusIndex(null);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [containerRef, setFocusIndex]);
 
   return (
     <div
       ref={containerRef}
-      className="relative max-w-[500px] h-auto bg-slate-700 overflow-hidden rounded shadow-md"
+      id="preview-container"
+      className="relative max-w-[500px] h-auto bg-slate-700 overflow-hidden rounded-none sm:rounded shadow-md"
     >
       {img.length === 0 ? (
         <div className="w-full animate-pulse h-72 flex justify-center items-center">
@@ -115,50 +94,20 @@ export default function Preview() {
       )}
       {textBoxes.length > 0 &&
         textBoxes.map((text, index) => {
-          const scaleXFactor = containerSize.width / imgDimensions.width;
-          const scaleYFactor = containerSize.height / imgDimensions.height;
           return (
-            <Resizeable
+            <TextBox
               key={index}
-              parentElement={containerRef.current}
-              isFocused={focusIndex === index}
-              handleGetFocused={() => {
-                setFocusIndex(index);
-                setLastFocusIndex(index);
+              pos={{ x: text.x, y: text.y }}
+              size={{ x: text.width, y: text.height }}
+              text={text}
+              tabIndex={index}
+              onFocus={() => {
+                setLastFocusIndex(index)
               }}
-              handleLostFocus={() => setFocusIndex(null)}
-              pos={{
-                x: text.x * scaleXFactor,
-                y: text.y * scaleYFactor,
-              }}
-              size={{
-                x: text.width * scaleXFactor,
-                y: text.height * scaleYFactor,
-              }}
-              setPos={(pos) =>
-                setPosHandler(index, {
-                  x: pos.x / scaleXFactor,
-                  y: pos.y / scaleYFactor,
-                })
-              }
-              setSize={(size) =>
-                setSizeHanlder(index, {
-                  x: size.x / scaleXFactor,
-                  y: size.y / scaleYFactor,
-                })
-              }
-            >
-              <CustomFont
-                textAlign={text.textAlign}
-                styleBorder={text.styleBorder}
-                borderColor={text.borderColor}
-                fontSize={text.fontSize * scaleXFactor}
-                color={text.color}
-                lineHeight={text.lineHeight}
-                fontFamily={text.fontFamily}
-                text={text.text}
-              />
-            </Resizeable>
+              setPos={(pos) => setPosHandler(index, pos)}
+              setSize={(size) => setSizeHandler(index, size)}
+              minSize={25}
+            />
           );
         })}
     </div>

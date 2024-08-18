@@ -51,12 +51,10 @@ export default function CustomSelect({
       </div>
 
       <div
-        className={`absolute top-[calc(100%+4px)] flex flex-col gap-1 ${classNameSelect}  transition-opacity transition-transform duration-300 ease-out ${
+        className={`absolute bottom-[calc(100%+4px)] flex flex-col gap-1 ${classNameSelect}  transition-opacity transition-transform duration-300 ease-out ${
           displayOptions
             ? "translate-y-100 opacity-100"
             : "translate-y-0 opacity-0"
-        } ${
-          displayOptions ? "scale-y-100" : "scale-y-90"
         } transform origin-top`}
         style={{ transformOrigin: "top" }}
       >

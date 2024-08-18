@@ -6,10 +6,15 @@ import {
   TEXT_SHADOW_CANVAS_RESET,
   SpaceStyleEnum,
   SpaceImgConfigType,
+  Axis
 } from "./definitions";
 
 const saveImage = (config: EditImageConfig) => {
   const { img: imgageConfig, textBox, space } = config;
+
+  const containerPreview = document.getElementById("preview-container");
+
+  if (!containerPreview) throw new Error("No preview container found");
 
   const textBoxes = textBox.boxes;
   const imageUrl = imgageConfig.url;
@@ -28,11 +33,13 @@ const saveImage = (config: EditImageConfig) => {
 
     if (!ctx) throw new Error("No context found");
 
+    const previewScale = { x: img.width/containerPreview.clientWidth , y: img.height/containerPreview.clientHeight };
+
     // Draw the image
     drawImageByScaleXY(ctx, canvas, img, scale, space);
 
     // Draw Text boxes
-    drawTextBoxes(textBoxes, ctx);
+    drawTextBoxes(textBoxes, ctx, previewScale);
 
     // Save the canvas content as an image
     const imageData = canvas.toDataURL("image/png");
@@ -43,12 +50,9 @@ const saveImage = (config: EditImageConfig) => {
   };
 };
 
-const drawTextBoxes = (textBoxes: TextBox[], ctx: CanvasRenderingContext2D) => {
+const drawTextBoxes = (textBoxes: TextBox[], ctx: CanvasRenderingContext2D, scale:Axis) => {
   for (let i = 0; i < textBoxes.length; i++) {
-    let text: TextBox = {
-      ...textBoxes[i],
-      lineHeight: Math.round(textBoxes[i].lineHeight * textBoxes[i].fontSize),
-    };
+    let text: TextBox = scaleTextBox(textBoxes[i], scale);
 
     ctx.font = `${text.fontSize}px ${text.fontFamily}`;
     ctx.fillStyle = text.color;
@@ -67,17 +71,19 @@ const drawTextBoxes = (textBoxes: TextBox[], ctx: CanvasRenderingContext2D) => {
   }
 };
 
-const scaleTextBox = (text: TextBox, scale: number) => {
+const scaleTextBox = (text: TextBox, scale:Axis={ x: 1, y: 1 }) => {
   const auxFontSize = text.fontSize;
+  const {x,y} = scale;
 
+  console.log(x,y)
   const newText = {
     ...text,
-    x: Math.round(text.x * scale),
-    y: Math.round(text.y * scale),
-    width: Math.floor(text.width * scale),
-    height: Math.round(text.height * scale),
-    fontSize: Math.round(text.fontSize * scale),
-    lineHeight: Math.round(text.lineHeight * scale * auxFontSize),
+    x: Math.round(text.x * x),
+    y: Math.round(text.y * y),
+    width: Math.floor(text.width * x),
+    height: Math.round(text.height * y),
+    fontSize: Math.round(text.fontSize * x),
+    lineHeight: Math.round(text.lineHeight * y * auxFontSize),
   };
 
   return newText;
